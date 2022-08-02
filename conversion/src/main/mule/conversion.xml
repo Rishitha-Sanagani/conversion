@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d8132e13-bf35-4ad6-b00e-7c87ed31dc5d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="conversionFlow" doc:id="f796c8fc-f0ec-48cb-a942-016245235028" >
+		<http:listener doc:name="Listener" doc:id="6f7f6e89-78cd-4876-a708-460da9ea4dc9" config-ref="HTTP_Listener_config" path="/convert"/>
+		<ee:transform doc:name="Transform Message" doc:id="f07a192f-1bbf-45a7-83af-a43df479aee8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var a=[{
+    "employee": "rishi",
+    "id":"123",
+    "salary":"50000"
+}]
+var b=[{
+    "employee": "rishi",
+    "company":"auropro",
+    "location":"heitech"
+}]
+---
+a map(avalue)->{
+    emp:avalue.employee as String,
+    num:avalue.id as Number,
+    amount:avalue.salary,
+    (b filter($.*employee contains  avalue.employee)map(bvalue)->{org:bvalue.company})
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b54f55a0-15d0-467e-92f1-345ba6af74e2" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="409007cf-8415-41e2-b640-97d646547fa5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="dcc26931-df3e-43a6-9e5c-0e8b475fea32" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="c59e23ef-3ba2-4500-83c4-d0685a062496">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{(payload)} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
